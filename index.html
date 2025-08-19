@@ -1,33 +1,32 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-  <meta charset="UTF-8">
-  <title>Major Select - Web</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Major Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <h1>برنامه انتخاب رشته</h1>
+  <main style="padding:12px">
+    <h1 style="margin:0 0 12px">برنامه انتخاب رشته</h1>
 
-    <!-- دکمه بارگذاری اکسل -->
-    <input type="file" id="excelFileInput" accept=".xlsx, .xls" />
+    <!-- دکمه آپلود: همین را می‌گیریم (id مهم است) -->
+    <input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" />
 
-    <!-- جدول رشته‌ها -->
-    <div id="table-container">
-      <table id="dataTable">
+    <div id="status" style="margin:10px 0; font-size:14px; opacity:.8"></div>
+
+    <div id="table-wrap" style="overflow:auto; max-height:60vh; border:1px solid #ddd; margin-top:8px">
+      <table id="dataTable" style="width:100%; border-collapse:collapse">
         <thead id="tableHead"></thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
 
-    <!-- فلش کارت‌ها -->
-    <div id="flashcards"></div>
-  </div>
+    <section id="flashcards" style="margin-top:16px"></section>
+  </main>
 
-  <!-- لود کتابخانه اکسل -->
+  <!-- ترتیب اسکریپت‌ها خیلی مهم است -->
   <script src="xlsx.full.min.js"></script>
   <script src="renderer-web.js"></script>
 </body>
 </html>
-<!-- bust: v2 -->
