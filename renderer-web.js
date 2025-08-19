@@ -1,67 +1,131 @@
-// انتخاب ورودی فایل
-const fileInput = document.getElementById("excelFileInput");
-const tableHead = document.getElementById("tableHead");
-const tableBody = document.getElementById("tableBody");
-const flashcards = document.getElementById("flashcards");
+// نسخه دیباگ‌دار مطمئن برای بارگذاری اکسل
 
-fileInput.addEventListener("change", handleFile, false);
+(function(){
+  const log  = (...a)=>{ try{console.log("[UPLOAD]",...a);}catch{} };
+  const err  = (...a)=>{ try{console.error("[UPLOAD]",...a);}catch{} };
+  const $    = (q)=>document.querySelector(q);
 
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const input   = $("#excelFileInput");
+  const status  = $("#status");
+  const thead   = $("#tableHead");
+  const tbody   = $("#tableBody");
+  const cards   = $("#flashcards");
 
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const data = new Uint8Array(event.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+  function setStatus(txt){ if(status) status.textContent = txt || ""; }
 
-    renderTable(jsonData);
-  };
-  reader.readAsArrayBuffer(file);
-}
+  function ensureXLSX(){
+    if (typeof XLSX === "undefined") {
+      setStatus("❌ کتابخانه XLSX لود نشده است (مسیر xlsx.full.min.js را چک کن).");
+      alert("XLSX لود نشده است. فایل xlsx.full.min.js را کنار index.html و با همین نام بگذار.");
+      return false;
+    }
+    return true;
+  }
 
-// ساخت جدول از داده‌های اکسل
-function renderTable(data) {
-  tableHead.innerHTML = "";
-  tableBody.innerHTML = "";
-  flashcards.innerHTML = "";
+  function toRows(workbook){
+    const first = workbook.SheetNames[0];
+    const ws = workbook.Sheets[first];
+    // header:1 → آرایه‌ی آرایه (ساده‌ترین برای دیباگ)
+    return XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  }
 
-  if (data.length === 0) return;
+  function renderTable(rows){
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+    cards.innerHTML = "";
 
-  // هدر
-  const headerRow = document.createElement("tr");
-  data[0].forEach(header => {
-    const th = document.createElement("th");
-    th.textContent = header;
-    headerRow.appendChild(th);
-  });
-  tableHead.appendChild(headerRow);
+    if (!rows || !rows.length) { setStatus("هیچ ردیفی در فایل یافت نشد."); return; }
 
-  // بدنه جدول
-  data.slice(1).forEach((row, rowIndex) => {
-    const tr = document.createElement("tr");
+    // هدر
+    const headers = rows[0] || [];
+    const trh = document.createElement("tr");
+    headers.forEach(h=>{
+      const th = document.createElement("th");
+      th.textContent = h;
+      th.style.borderBottom = "1px solid #ccc";
+      th.style.textAlign = "right";
+      th.style.padding = "6px";
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
 
-    row.forEach(cell => {
-      const td = document.createElement("td");
-      td.textContent = cell || "";
-      tr.appendChild(td);
+    // بدنه
+    rows.slice(1).forEach((row)=>{
+      const tr = document.createElement("tr");
+      row.forEach(cell=>{
+        const td = document.createElement("td");
+        td.textContent = (cell ?? "");
+        td.style.borderBottom = "1px solid #eee";
+        td.style.padding = "6px";
+        tr.appendChild(td);
+      });
+      // دابل کلیک → اضافه به فلش‌کارت
+      tr.addEventListener("dblclick", ()=>{
+        addFlashcard(row);
+      });
+      tbody.appendChild(tr);
     });
 
-    // دابل کلیک برای افزودن فلش کارت
-    tr.addEventListener("dblclick", () => {
-      addFlashcard(row);
-    });
+    setStatus(`✅ ${rows.length-1} ردیف لود شد.`);
+  }
 
-    tableBody.appendChild(tr);
-  });
-}
+  function addFlashcard(row){
+    const div = document.createElement("div");
+    div.className = "flashcard";
+    div.style.cssText = "border:1px solid #ddd; border-radius:8px; padding:8px; margin:8px 0;";
+    div.innerHTML = row.map(c=>`<p style="margin:4px 0">${c}</p>`).join("");
+    cards.appendChild(div);
+  }
 
-// افزودن فلش کارت
-function addFlashcard(rowData) {
-  const card = document.createElement("div");
-  card.className = "flashcard";
-  card.innerHTML = rowData.map(cell => `<p>${cell}</p>`).join("");
-  flashcards.appendChild(card);
-}
+  async function onFileChange(e){
+    const f = e.target.files && e.target.files[0];
+    if (!f){ setStatus("فایلی انتخاب نشد."); return; }
+    if (!ensureXLSX()) { e.target.value=""; return; }
+
+    setStatus(`در حال خواندن: ${f.name} ...`);
+    const reader = new FileReader();
+
+    reader.onload = (ev)=>{
+      try{
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, { type: "array" });
+        const rows = toRows(wb);
+        log("parsed rows:", rows.length);
+        renderTable(rows);
+      }catch(ex){
+        err("parse error:", ex);
+        setStatus("❌ خواندن فایل ناموفق بود. فرمت/صفحه اول را چک کن.");
+        alert("خواندن فایل اکسل/CSV ناموفق بود.");
+      }finally{
+        e.target.value = ""; // اجازه انتخاب مجدد همان فایل
+      }
+    };
+    reader.onerror = ()=>{
+      setStatus("❌ خطا در خواندن فایل.");
+      e.target.value="";
+    };
+    reader.readAsArrayBuffer(f);
+  }
+
+  function wire(){
+    if (!input) { err("excelFileInput not found"); return; }
+    if (!input.dataset.wired){
+      input.addEventListener("change", onFileChange);
+      input.dataset.wired = "1";
+      log("input wired");
+    }
+    // تست لود XLSX
+    if (typeof XLSX !== "undefined") {
+      log("XLSX OK", XLSX.version || "");
+      setStatus("کتابخانه XLSX آماده است. یک فایل اکسل انتخاب کنید.");
+    } else {
+      setStatus("منتظر کتابخانه XLSX ... اگر مشکل بود مسیر اسکریپت را چک کن.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wire);
+  } else {
+    wire();
+  }
+})();
