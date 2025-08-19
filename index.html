@@ -1,124 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="fa">
 <head>
   <meta charset="UTF-8">
-  <title>انتخاب رشته — v3.2 (Swapped + Filters)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Major Select - Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-<style>
-
-/* 🛠 Resizable columns + wrap text */
-th, td {
-  white-space: normal !important;
-  word-wrap: break-word !important;
-  overflow: hidden;
-}
-
-th.resizable {
-  position: relative;
-}
-
-th.resizable .resizer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 5px;
-  cursor: col-resize;
-  user-select: none;
-  height: 100%;
-}
-</style>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f71b8">
 </head>
 <body>
-  <div class="app">
-    <div class="toolbar">
-      <button id="btnLoad">بارگذاری (CSV/Excel)</button>
-      <button id="btnFilters">فیلترها</button>
-      <button id="btnDeleteAllRows" class="danger">حذف همه</button>
-      <button id="btnExportAllCSV">CSV نتایج</button>
-      <button id="btnExportAllXLSX">Excel نتایج</button>
-      <button id="btnColumns">ستون‌ها</button>
-      <input id="search" type="text" placeholder="جستجو..." />
+  <div id="app">
+    <h1>برنامه انتخاب رشته</h1>
+
+    <!-- دکمه بارگذاری اکسل -->
+    <input type="file" id="excelFileInput" accept=".xlsx, .xls" />
+
+    <!-- جدول رشته‌ها -->
+    <div id="table-container">
+      <table id="dataTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
 
-    <div class="content">
-      <!-- LEFT: Table -->
-      <div class="panel">
-        <h3>جدول رشته‌ها<span id="totalCount" class="count-badge"></span><span id="filteredCount" class="count-badge muted"></span><div id="colSizer" class="col-sizer" title="تنظیم یکجای عرض ستون‌ها"><input type="range" id="colRange" min="50" max="100" step="1" value="50"><span id="colRangeVal">۱۰۰px</span></div></h3>
-        <div class="tablewrap">
-          <table id="grid">
-            <thead><tr id="headrow"></tr></thead>
-            <tbody id="bodyrows"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="splitter" aria-label="divider" title="برای تغییر اندازه بکشید"></div>
-
-      <!-- RIGHT: Cards + its buttons -->
-      <div class="panel">
-        <h3>انتخاب‌شده‌ها (فلش‌کارت)</h3>
-        <div id="cards" class="rightcards"></div>
-        <div class="right-actions">
-          <button id="btnAdd">افزودن ➜</button>
-          <button id="btnRemove">حذف</button>
-          <button id="btnMoveUp">بالا</button>
-          <button id="btnMoveDown">پایین</button>
-          <button id="btnClearCards" class="danger">حذف همه</button>
-          <button id="btnExportSelCSV">CSV انتخابی</button>
-          <button id="btnExportSelXLSX">Excel انتخابی</button>
-          <button id="btnExportSelPDF">PDF انتخابی</button>
-        </div>
-      </div>
-    </div>
+    <!-- فلش کارت‌ها -->
+    <div id="flashcards"></div>
   </div>
 
-  <!-- Filter Modal -->
-  <div id="filterModal" class="modal-backdrop">
-    <div class="modal">
-      <h4>فیلترها</h4>
-      <div id="chips" class="filters-header"></div>
-      <div class="filter-top">
-        <button id="btnClearThis" class="danger">پاک این ستون</button>
-        <button id="btnSelectAll">انتخاب همه</button>
-        <button id="btnSelectNone">هیچ</button>
-        <input id="filterSearch" type="text" placeholder="…جستجو">
-      </div>
-      <div id="filterBody" class="filter-body"></div>
-      <div class="filter-footer">
-        <div class="left">
-          <button id="btnClearAll">حذف همه فیلترها</button>
-        </div>
-        <div class="right">
-          <button id="btnFilterCancel">انصراف</button>
-          <button id="btnFilterApply" class="apply">اعمال</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <input id="file" type="file" accept=".xlsx,.xls,.csv" hidden />
-  <script src="columns_patch.js"></script>
-<script src="selection_patch.js"></script>
-<button id="btnExportPDF" title="Export PDF">PDF</button>
-
-  <script src="web-shim.js"></script>
-  <script src="libs/xlsx.full.min.js"></script>
+  <!-- لود کتابخانه اکسل -->
+  <script src="xlsx.full.min.js"></script>
   <script src="renderer-web.js"></script>
-
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./service-worker.js').catch(function(e){
-        console.warn('SW registration failed', e);
-      });
-    });
-  }
-</script>
-
 </body>
 </html>
